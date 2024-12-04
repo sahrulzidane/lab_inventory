@@ -1,0 +1,60 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<style>
+    .button-container {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 15px;
+    }
+
+    .btn-create {
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: white;
+        text-decoration: none;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+
+    .btn-create:hover {
+        background-color: #0056b3;
+    }
+</style>
+    <h1>Daftar Permintaan Stok</h1>
+    <!-- Button untuk Create Lab Request -->
+    <div class="button-container">
+        <a href="{{ url_for('stock_request') }}" class="btn-create">Create Lab Request</a>
+    </div>
+
+    <table border="1">
+        <thead>
+            <tr>
+                <th>ID Permintaan</th>
+                <th>Nama Produk</th>
+                <th>Placement</th>
+                <th>Jumlah Permintaan</th>
+                <th>Catatan</th>
+                <th>Tanggal Permintaan</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for request in requests %}
+                <tr>
+                    <td>{{ request.request_id }}</td>
+                    <td>{{ request.product_name }}</td>
+                    <td>{{ request.location_name }}</td>
+                    <td>{{ request.request_qty }}</td>
+                    <td>{{ request.remark }}</td>
+                    <td>{{ request.update_on }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
+
+
+{% endblock content %}

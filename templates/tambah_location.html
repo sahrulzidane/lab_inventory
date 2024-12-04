@@ -1,0 +1,44 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+    <div class="container mt-4">
+        <h1 class="mb-4">Tambah Location</h1>
+        <form method="POST" action="{{ url_for('tambah_location') }}">
+            <div class="form-group">
+                <label for="location_id">Location ID</label>
+                <input
+                    type="text"
+                    id="location_id"
+                    name="location_id"
+                    class="form-control"
+                    placeholder="Masukkan ID Lokasi"
+                    required>
+            </div>
+            <div class="form-group">
+                <label for="location_name">Location Name</label>
+                <input
+                    type="text"
+                    id="location_name"
+                    name="location_name"
+                    class="form-control"
+                    placeholder="Masukkan Nama Lokasi"
+                    required>
+            </div>
+            <div class="form-group">
+                <label for="location_type">Location Type</label>
+                <select
+                    id="location_type"
+                    name="location_type"
+                    class="form-control"
+                    required>
+                    <option value="Warehouse">Warehouse</option>
+                    <option value="Analyzer">Analyzer</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Save</button>
+            <a href="{{ url_for('master_location') }}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+
+{% endblock %}

@@ -1,0 +1,101 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<section class="content-header">
+    <h1>Near Expired Products</h1>
+    <!-- TABLE: NEAR EXPIRED PRODUCTS -->
+    <div class="card">
+        <div class="card-header border-transparent">
+            <h3 class="card-title">Near Expired Products</h3>
+            <div class="card-tools">
+                <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                    <i class="fas fa-minus"></i>
+                </button>
+                <button type="button" class="btn btn-tool" data-card-widget="remove">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        <!-- /.card-header -->
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table m-0">
+                    <thead>
+                        <tr>
+                            <th>Product ID</th>
+                            <th>Product Name</th>
+                            <th>Batch No</th>
+                            <th>Expired Date</th>
+                            <th>Current Stock</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in inventory %}
+                        <tr>
+                            <td>{{ item.product_id }}</td>
+                            <td>{{ item.product_name }}</td>
+                            <td>{{ item.batch_no }}</td>
+                            <td>{{ item.stock_expired }}</td>
+                            <td>{{ item.current_stock }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <!-- /.table-responsive -->
+        </div>
+        <!-- /.card-body -->
+        <div class="card-footer clearfix">
+            <a href="javascript:void(0)" class="btn btn-sm btn-info float-left">Add New Product</a>
+            <a href="javascript:void(0)" class="btn btn-sm btn-secondary float-right">View All Products</a>
+        </div>
+        <!-- /.card-footer -->
+    </div>
+    <!-- /.card -->
+</section>
+
+<section class="content">
+    <div class="row">
+        <div class="col-md-4">
+            <!-- Info Boxes -->
+            <div class="info-box mb-3 bg-warning">
+                <span class="info-box-icon"><i class="fas fa-exclamation-triangle"></i></span>
+                <div class="info-box-content">
+                    <span class="info-box-text">Total Near Expired</span>
+                    <span class="info-box-number">{{ inventory|length }}</span>
+                </div>
+            </div>
+            <div class="info-box mb-3 bg-success">
+                <span class="info-box-icon"><i class="fas fa-check-circle"></i></span>
+                <div class="info-box-content">
+                    <span class="info-box-text">Safe Stock</span>
+                    <span class="info-box-number">To be calculated</span>
+                </div>
+            </div>
+        </div>
+        <!-- /.col-md-4 -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Statistics</h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                        <button type="button" class="btn btn-tool" data-card-widget="remove">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <canvas id="nearExpiredChart" height="200"></canvas>
+                </div>
+                <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
+        </div>
+    </div>
+</section>
+
+{% endblock %}

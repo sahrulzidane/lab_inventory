@@ -1,0 +1,146 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<style>
+    .table-danger {
+        background-color: #f8d7da !important;
+    }
+</style>
+
+
+<section class="content-header">
+    <h2>Welcome to Lab Inventory, {{ username }}!</h2>
+    <p>Here you can manage all your inventory tasks efficiently. Choose an option from the sidebar.</p>
+</section>
+
+<section class="content">
+    <!-- Info Boxes -->
+    <div class="row">
+        <!-- Total Near Expired -->
+        <div class="col-md-12">
+            <div class="info-box mb-3 bg-warning">
+                <span class="info-box-icon"><i class="fas fa-exclamation-triangle"></i></span>
+                <div class="info-box-content">
+                    <span class="info-box-text">Total Near Expired</span>
+                    <span class="info-box-number">{{ inventory|length }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Near Expired Products Table -->
+    <div class="card">
+        <div class="card-header border-transparent">
+            <h3 class="card-title">Near Expired Products</h3>
+            <div class="card-tools">
+                <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                    <i class="fas fa-minus"></i>
+                </button>
+                <button type="button" class="btn btn-tool" data-card-widget="remove">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table m-0">
+                    <thead>
+                        <tr>
+                            <th>Product ID</th>
+                            <th>Product Name</th>
+                            <th>Batch No</th>
+                            <th>Expired Date</th>
+                            <th>Current Stock</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in inventory %}
+                        <tr>
+                            <td>{{ item.product_id }}</td>
+                            <td>{{ item.product_name }}</td>
+                            <td>{{ item.batch_no }}</td>
+                            <td>{{ item.stock_expired }}</td>
+                            <td>{{ item.current_stock }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer clearfix">
+            <a href="javascript:void(0)" class="btn btn-sm btn-info float-left">Add New Product</a>
+            <a href="javascript:void(0)" class="btn btn-sm btn-secondary float-right">View All Products</a>
+        </div>
+    </div>
+
+    <!-- Safe Stock Info -->
+    <div class="row">
+        <!-- Total Near Expired -->
+        <div class="col-md-12">
+            <div class="info-box mb-3 bg-danger">
+                <span class="info-box-icon"><i class="fas fa-exclamation-triangle"></i></span>
+                <div class="info-box-content">
+                    <span class="info-box-text">Safety Level Alert</span>
+                    <span class="info-box-number">{{ inventorys|length }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabel Data Unit (Inventory Table) -->
+    <div class="row mt-3">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Product ID</th>
+                                <th>Product Name</th>
+                                <th>Supplier Name</th>
+                                <th>Manufacture Name</th>
+                                <th>Stock In</th>
+                                <th>Stock Out</th>
+                                <th>Current Stock</th>
+                                <th>Safety Level</th>
+                                <th>Action</th>
+                                <th>Delete</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for inventory in inventorys %}
+                            <tr class="{% if inventory.current_stock < inventory.safety_level %}table-danger{% endif %}">
+                                <td>{{ inventory.product_id }}</td>
+                                <td>{{ inventory.product_name }}</td>
+                                <td>{{ inventory.supp_name }}</td>
+                                <td>{{ inventory.manu_name }}</td>
+                                <td>{{ inventory.stock_in }}</td>
+                                <td>{{ inventory.stock_out }}</td>
+                                <td>{{ inventory.current_stock }}</td>
+                                <td>{{ inventory.safety_level }}</td>
+                                <td>
+                                    <a href="#" class="btn btn-warning btn-sm">View Detail</a>
+                                </td>
+                                <td>
+                                    <form action="#" method="POST" onsubmit="return confirm('Hapus product ini?');">
+                                        <button type="submit" class="btn btn-dark btn-sm">Edit</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="10" class="text-center">Data tidak ditemukan</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</section>
+
+{% endblock %}

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Request</title>
+</head>
+<body>
+    <h1>Form Permintaan Stok</h1>
+    <form action="{{ url_for('stock_request') }}" method="POST">
+        <label for="product_id">Pilih Produk:</label>
+        <select name="product_id" id="product_id" required>
+            {% for product in products %}
+                <option value="{{ product[0] }}">{{ product[1] }}</option>
+            {% endfor %}
+        </select>
+        <br>
+
+        <label for="location_id">Pilih Lokasi (Lab/Gudang):</label>
+        <select name="location_id" id="location_id" required>
+            {% for location in locations %}
+                <option value="{{ location[0] }}">{{ location[1] }}</option>
+            {% endfor %}
+        </select>
+        <br>
+
+        <label for="request_qty">Jumlah Permintaan:</label>
+        <input type="number" name="request_qty" id="request_qty" required>
+        <br>
+
+        <label for="remarks">Catatan Tambahan:</label>
+        <textarea name="remarks" id="remarks"></textarea>
+        <br>
+
+        <button type="submit">Kirim Permintaan</button>
+    </form>
+</body>
+</html>

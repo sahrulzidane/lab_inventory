@@ -1,0 +1,86 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Inventory Data</h1>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <!-- Bagian Tambah dan Cari -->
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <button class="btn btn-primary" onclick="window.location.href='/stock_in'">Stock In</button>
+                <button class="btn btn-primary" onclick="window.location.href='/stock_out'">Stock Out</button>
+                <button class="btn btn-primary" onclick="window.location.href='/tambah_product'">Discard or Item Returned</button>
+            </div>
+            <div class="col-md-8">
+                <form method="get" action="/inventory_data">
+                    <div class="input-group">
+                        <input type="text" name="search" class="form-control" placeholder="Cari Product">
+                        <button class="btn btn-secondary" type="submit">Cari</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tabel Data Unit -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Product ID</th>
+                                    <th>Product Name</th>
+                                    <th>Supplier Name</th>
+                                    <th>Manufacture Name</th>
+                                    <th>Stock In</th>
+                                    <th>Stock Out</th>
+                                    <th>Current Stock</th>
+                                    <th>Safety Level</th>
+                                    <th>Action</th>
+                                    <th>Edit</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for inventory in inventorys %}
+                                <tr>
+                                    <td>{{ inventory.product_id }}</td>
+                                    <td>{{ inventory.product_name }}</td>
+                                    <td>{{ inventory.supp_name }}</td>
+                                    <td>{{ inventory.manu_name }}</td>
+                                    <td>{{ inventory.stock_in }}</td>
+                                    <td>{{ inventory.stock_out }}</td>
+                                    <td>{{ inventory.current_stock }}</td>
+                                    <td>{{ inventory.safety_level }}</td>
+                                    <td>
+                                        <a href="#" class="btn btn-warning btn-sm">View Detail</a>
+                                    </td>
+                                    <td>
+                                        <form action="#" method="POST" onsubmit="return confirm('Hapus product ini?');">
+                                            <button type="submit" class="btn btn-dark btn-sm">Edit</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="10" class="text-center">Data tidak ditemukan</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

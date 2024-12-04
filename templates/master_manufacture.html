@@ -1,0 +1,73 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Master Data Manufacture</h1>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <!-- Bagian Tambah dan Cari -->
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <button class="btn btn-primary" onclick="window.location.href='/tambah_manufacture'">Tambah Manufacture</button>
+            </div>
+            <div class="col-md-8">
+                <form method="get" action="/master_manufacture">
+                    <div class="input-group">
+                        <input type="text" name="search" class="form-control" placeholder="Cari Lokasi">
+                        <button class="btn btn-secondary" type="submit">Cari</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tabel Data Unit -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Manufacture ID</th>
+                                    <th>Manufacture Name</th>
+                                    <th>Country</th>
+                                    <th>Edit</th>
+                                    <th>Delete</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for manufacture in manufactures %}
+                                <tr>
+                                    <td>{{ manufacture.manu_id }}</td>
+                                    <td>{{ manufacture.manu_name }}</td>
+                                    <td>{{ manufacture.manu_country }}</td>
+                                    <td>
+                                        <a href="{{ url_for('edit_manufacture', manu_id=manufacture.manu_id) }}" class="btn btn-dark btn-sm">Edit</a>
+                                        </td>
+                                    <td>
+                                        <a href="{{ url_for('delete_manufacture', manu_id=manufacture.manu_id) }}" class="btn btn-danger btn-sm" onclick="return confirm('Hapus manufacture ini?')">Delete</a>
+
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="3" class="text-center">Data tidak ditemukan</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
