@@ -1,0 +1,57 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Edit Supplier</h1>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <form method="POST" action="/edit_supplier/{{ supplier.SUPPLIER_ID }}">
+                            <div class="form-group">
+                                <label for="name">Nama Supplier</label>
+                                <input type="text" class="form-control" id="name" name="name" value="{{ supplier.SUPP_NAME }}" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="address">Alamat</label>
+                                <textarea class="form-control" id="address" name="address" rows="2" required>{{ supplier.SUPP_ADDRESS }}</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="region">Region</label>
+                                <input type="text" class="form-control" id="region" name="region" value="{{ supplier.SUPP_REGION }}" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="telp">Telepon</label>
+                                <input type="text" class="form-control" id="telp" name="telp" value="{{ supplier.SUPP_TELP }}" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="email">Email</label>
+                                <input type="email" class="form-control" id="email" name="email" value="{{ supplier.SUPP_EMAIL }}" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="status">Status</label>
+                                <select class="form-control" id="status" name="status" required>
+                                    <option value="Active" {% if supplier.SUPP_FLAG == 'Active' %}selected{% endif %}>Active</option>
+                                    <option value="Inactive" {% if supplier.SUPP_FLAG == 'Inactive' %}selected{% endif %}>Inactive</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Simpan</button>
+                            <a href="/master_supplier" class="btn btn-secondary">Batal</a>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

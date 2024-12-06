@@ -23,38 +23,35 @@
         background-color: #0056b3;
     }
 </style>
-    <h1>Daftar Permintaan Stok</h1>
-    <!-- Button untuk Create Lab Request -->
-    <div class="button-container">
-        <a href="{{ url_for('stock_request') }}" class="btn-create">Create Lab Request</a>
-    </div>
 
-    <table border="1">
-        <thead>
+<h1>Daftar Permintaan Stok</h1>
+<!-- Button untuk Create Lab Request -->
+<div class="button-container">
+    <a href="{{ url_for('stock_request') }}" class="btn-create">Create Lab Request</a>
+</div>
+
+<table border="1" style="width: 100%; border-collapse: collapse;">
+    <thead>
+        <tr>
+            <th>ID Permintaan</th>
+            <th>Nama Produk</th>
+            <th>Lokasi</th>
+            <th>Jumlah Permintaan</th>
+            <th>Catatan</th>
+            <th>Tanggal Permintaan</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for request in requests %}
             <tr>
-                <th>ID Permintaan</th>
-                <th>Nama Produk</th>
-                <th>Placement</th>
-                <th>Jumlah Permintaan</th>
-                <th>Catatan</th>
-                <th>Tanggal Permintaan</th>
+                <td>{{ request.request_id }}</td>
+                <td>{{ request.product_name }}</td>
+                <td>{{ request.location_name }}</td>
+                <td>{{ request.request_qty }}</td>
+                <td>{{ request.remark }}</td>
+                <td>{{ request.tanggal_request }}</td>
             </tr>
-        </thead>
-        <tbody>
-            {% for request in requests %}
-                <tr>
-                    <td>{{ request.request_id }}</td>
-                    <td>{{ request.product_name }}</td>
-                    <td>{{ request.location_name }}</td>
-                    <td>{{ request.request_qty }}</td>
-                    <td>{{ request.remark }}</td>
-                    <td>{{ request.update_on }}</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</body>
-</html>
-
-
+        {% endfor %}
+    </tbody>
+</table>
 {% endblock content %}

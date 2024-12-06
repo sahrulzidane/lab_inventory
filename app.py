@@ -272,6 +272,72 @@ def delete_manufacture(manu_id):
 
     return redirect(url_for('master_manufacture'))  # Redirect kembali ke halaman master__manufacture
 
+# Dummy data untuk demonstration
+suppliers = [
+    {
+        "SUPPLIER_ID": 1,
+        "SUPP_NAME": "Supplier A",
+        "SUPP_ADDRESS": "Jl. Merpati No. 1",
+        "SUPP_REGION": "Jakarta",
+        "SUPP_TELP": "08123456789",
+        "SUPP_EMAIL": "supplierA@example.com",
+        "SUPP_FLAG": "Active"
+    },
+    {
+        "SUPPLIER_ID": 2,
+        "SUPP_NAME": "Supplier B",
+        "SUPP_ADDRESS": "Jl. Kakatua No. 5",
+        "SUPP_REGION": "Bandung",
+        "SUPP_TELP": "08198765432",
+        "SUPP_EMAIL": "supplierB@example.com",
+        "SUPP_FLAG": "Inactive"
+    },
+]
+
+@app.route('/master_supplier', methods=['GET'])
+def master_supplier():
+    search_query = request.args.get('search', '')
+    filtered_suppliers = [
+        supplier for supplier in suppliers if search_query.lower() in supplier["SUPP_NAME"].lower()
+    ] if search_query else suppliers
+    return render_template('master_supplier.html', suppliers=filtered_suppliers)
+
+@app.route('/tambah_supplier', methods=['GET', 'POST'])
+def tambah_supplier():
+    if request.method == 'POST':
+        new_supplier = {
+            "SUPPLIER_ID": len(suppliers) + 1,
+            "SUPP_NAME": request.form['SUPP_NAME'],
+            "SUPP_ADDRESS": request.form['SUPP_ADDRESS'],
+            "SUPP_REGION": request.form['SUPP_REGION'],
+            "SUPP_TELP": request.form['SUPP_TELP'],
+            "SUPP_EMAIL": request.form['SUPP_EMAIL'],
+            "SUPP_FLAG": "Active",
+        }
+        suppliers.append(new_supplier)
+        return redirect(url_for('master_supplier'))
+    return render_template('tambah_supplier.html')
+
+@app.route('/edit_supplier/<int:supplier_id>', methods=['GET', 'POST'])
+def edit_supplier(supplier_id):
+    supplier = next((s for s in suppliers if s["SUPPLIER_ID"] == supplier_id), None)
+    if request.method == 'POST':
+        supplier.update({
+            "SUPP_NAME": request.form['SUPP_NAME'],
+            "SUPP_ADDRESS": request.form['SUPP_ADDRESS'],
+            "SUPP_REGION": request.form['SUPP_REGION'],
+            "SUPP_TELP": request.form['SUPP_TELP'],
+            "SUPP_EMAIL": request.form['SUPP_EMAIL'],
+        })
+        return redirect(url_for('master_supplier'))
+    return render_template('edit_supplier.html', supplier=supplier)
+
+@app.route('/delete_supplier/<int:supplier_id>', methods=['GET'])
+def delete_supplier(supplier_id):
+    global suppliers
+    suppliers = [s for s in suppliers if s["SUPPLIER_ID"] != supplier_id]
+    return redirect(url_for('master_supplier'))
+
 
 # Route Master Product-----------------------------------------------------------------------------------------------------------------
 @app.route('/master_product')
@@ -966,6 +1032,107 @@ def stock_request():
     cursor.close()
 
     if request.method == 'POST':
+        location_id = request.form.get('location_id')  # Lokasi (lab/gudang)
+        user_id = 'LAB_USER'  # Nama pengguna yang melakukan permintaan
+        tanggal_request = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        remark = request.form.get('remarks') or None  # Catatan tambahan
+
+        # Ambil nilai dari sequence
+        cursor = conn.cursor()
+        cursor.execute("SELECT lab_request_seq.NEXTVAL FROM dual")
+        sequence_value = cursor.fetchone()[0]
+        cursor.close()
+
+        # Format ID permintaan
+        request_id = f"REQ24{sequence_value:08d}"  # Format REQ24000001
+
+        # Membuka koneksi dan cursor untuk INSERT ke header
+        cursor = conn.cursor()
+
+        # Simpan data ke tabel `lab_request_header`
+        cursor.execute("""
+            INSERT INTO lab_request_header (request_id, tanggal_request, user_id, location_id, remark)
+            VALUES (:request_id, TO_DATE(:tanggal_request, 'YYYY-MM-DD HH24:MI:SS'), :user_id, :location_id, :remark)
+        """, {
+            "request_id": request_id,
+            "tanggal_request": tanggal_request,
+            "user_id": user_id,
+            "location_id": location_id,
+            "remark": remark
+        })
+
+        # Ambil data produk dari form untuk tabel detail
+        products = request.form.getlist('product_id')
+        quantities = request.form.getlist('request_qty')
+
+        for product_id, request_qty in zip(products, quantities):
+            cursor.execute("""
+                INSERT INTO lab_request_detail (request_id, product_id, request_qty)
+                VALUES (:request_id, :product_id, :request_qty)
+            """, {
+                "request_id": request_id,
+                "product_id": product_id,
+                "request_qty": request_qty
+            })
+
+        conn.commit()
+        cursor.close()
+
+        # Redirect ke halaman daftar permintaan stok
+        return redirect(url_for('stock_request_list'))
+
+    return render_template('stock_request.html', products=products, locations=locations)
+
+@app.route('/stock_request_list', methods=['GET'])
+def stock_request_list():
+    cursor = conn.cursor()
+
+    # Query untuk mendapatkan daftar permintaan stok (gabungan header dan detail)
+    cursor.execute("""
+        SELECT 
+            h.request_id,
+            d.product_id,
+            p.product_name,
+            l.location_name,
+            d.request_qty,
+            h.remark,
+            h.tanggal_request
+        FROM 
+            lab_request_header h
+        JOIN lab_request_detail d ON h.request_id = d.request_id
+        JOIN product p ON d.product_id = p.product_id
+        JOIN location l ON h.location_id = l.location_id
+        ORDER BY h.tanggal_request DESC
+    """)
+    requests = [{
+        "request_id": row[0],
+        "product_id": row[1],
+        "product_name": row[2],
+        "location_name": row[3],
+        "request_qty": row[4],
+        "remark": row[5],
+        "tanggal_request": row[6]
+    } for row in cursor.fetchall()]
+
+    cursor.close()
+    return render_template('stock_request_list.html', requests=requests)
+
+'''
+@app.route('/stock_request', methods=['GET', 'POST'])
+def stock_request():
+    cursor = conn.cursor()
+
+    # Dropdown untuk produk
+    cursor.execute("SELECT product_id, product_name FROM product")
+    products = cursor.fetchall()
+
+    # Dropdown untuk lokasi (lab/gudang)
+    cursor.execute("SELECT location_id, location_name FROM location")
+    locations = cursor.fetchall()
+
+    cursor.close()
+
+    if request.method == 'POST':
         product_id = request.form.get('product_id')  # Ambil product_id dari form
         location_id = request.form.get('location_id')  # Ambil lokasi (lab/gudang)
         request_qty = request.form.get('request_qty')  # Kuantitas yang diminta
@@ -1037,7 +1204,7 @@ def stock_request_list():
 
     cursor.close()
     return render_template('stock_request_list.html', requests=requests)
-
+'''
 @app.route('/report')
 def report():
     cursor = conn.cursor()

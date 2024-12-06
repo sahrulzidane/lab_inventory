@@ -8,62 +8,127 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
-            background: linear-gradient(to right, #6a11cb, #2575fc); /* Gradien warna */
-            height: 100vh;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
             display: flex;
             justify-content: center;
             align-items: center;
+            height: 100vh;
             font-family: 'Arial', sans-serif;
-            color: #fff;
-            margin: 0;
         }
 
+        /* Full screen container */
         .login-container {
-            background: #ffffff;
-            border-radius: 15px;
-            box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.2);
-            width: 100%;
-            max-width: 400px;
-            padding: 30px;
-            text-align: center;
+            display: flex;
+            flex-direction: row;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            width: 80vw; /* Full width of the viewport */
+            height: 80vh; /* Full height of the viewport */
         }
 
-        .login-container h1 {
+        /* Illustration section */
+        .illustration {
+            background-color: #eaf4ff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0;
+            width: 50%;
+            height: 100%;
+        }
+
+        .illustration img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Login form section */
+        .login-form {
+            flex: 1;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .logo {
+            display: flex;
+            justify-content: center;
             margin-bottom: 20px;
-            font-size: 28px;
+        }
+
+        .logo img {
+            max-width: 300px;
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+        }
+
+        .welcome-text {
+            text-align: center;
+            font-size: 24px;
             font-weight: bold;
             color: #333;
+            margin-bottom: 20px;
         }
 
         .form-label {
-            color: #333;
             font-weight: 600;
+            color: #555;
         }
 
         .form-control {
-            border-radius: 10px;
+            border-radius: 5px;
         }
 
         .btn-primary {
-            background-color: #6a11cb;
+            background-color: #007bff;
             border: none;
-            border-radius: 20px;
-            padding: 10px 20px;
+            padding: 10px 15px;
             font-size: 16px;
             font-weight: bold;
-            transition: background-color 0.3s ease;
+            border-radius: 5px;
+            margin-top: 10px;
         }
 
         .btn-primary:hover {
-            background-color: #2575fc;
+            background-color: #0056b3;
         }
 
-        .alert {
-            border-radius: 10px;
+        .extra-links {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            margin-top: 10px;
         }
 
-        @media (max-width: 576px) {
+        .extra-links a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .extra-links a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
             .login-container {
+                flex-direction: column;
+            }
+
+            .illustration {
+                width: 100%;
+                height: 50%;
+                padding: 20px;
+            }
+
+            .login-form {
                 padding: 20px;
             }
         }
@@ -71,24 +136,32 @@
 </head>
 <body>
     <div class="login-container">
-        <h1>Lab Inventory Login</h1>
-        <!-- Login Form -->
-        <form method="POST" action="{{ url_for('login') }}">
-            {% if message %}
-            <div class="alert alert-danger" role="alert">
-                {{ message }}
+        <div class="illustration">
+            <img src="{{ url_for('static', filename='adminlte/img/illustration.jpg') }}" alt="Illustration">
+        </div>
+        <div class="login-form">
+            <div class="logo">
+                <img src="{{ url_for('static', filename='adminlte/img/logo-rscm.jpg') }}" alt="RSCM Logo">
             </div>
-            {% endif %}
-            <div class="mb-3">
-                <label for="user_id" class="form-label">Username or User ID</label>
-                <input type="text" class="form-control" id="user_id" name="user_id" required placeholder="Enter Username or User ID">
-            </div>
-            <div class="mb-3">
-                <label for="user_password" class="form-label">Password</label>
-                <input type="password" class="form-control" id="user_password" name="user_password" required placeholder="Enter Password">
-            </div>
-            <button type="submit" class="btn btn-primary w-100">Login</button>
-        </form>
+            <div class="welcome-text">Welcome Back To RSCM Lab Inventory!</div>
+            <form method="POST" action="{{ url_for('login') }}">
+                {% if message %}
+                <div class="alert alert-danger" role="alert">
+                    {{ message }}
+                </div>
+                {% endif %}
+                <div class="mb-3">
+                    <label for="user_id" class="form-label">User ID</label>
+                    <input type="text" class="form-control" id="user_id" name="user_id" required placeholder="Enter User ID">
+                </div>
+                <div class="mb-3">
+                    <label for="user_password" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="user_password" name="user_password" required placeholder="Enter your password">
+                </div>
+                
+                <button type="submit" class="btn btn-primary w-100">Login Now</button>
+            </form>
+        </div>
     </div>
 
     <!-- Bootstrap JS -->
