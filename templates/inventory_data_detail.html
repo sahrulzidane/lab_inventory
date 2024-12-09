@@ -1,0 +1,64 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Inventory Detail</h1>
+            </div>
+            <div class="col-sm-6 text-right">
+                <button class="btn btn-primary" onclick="window.location.href='/inventory_data'">Back to Inventory</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <!-- Tabel Detail Inventory -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Product ID</th>
+                                    <th>Product Name</th>
+                                    <th>Batch No</th>
+                                    <th>Supplier Name</th>
+                                    <th>Manufacture Name</th>
+                                    <th>Stock In</th>
+                                    <th>Stock Out</th>
+                                    <th>Current Stock</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if inventorys %}
+                                    {% for inventory in inventorys %}
+                                    <tr>
+                                        <td>{{ inventory.product_id }}</td>
+                                        <td>{{ inventory.product_name }}</td>
+                                        <td>{{ inventory.batch_no }}</td>
+                                        <td>{{ inventory.supp_name }}</td>
+                                        <td>{{ inventory.manu_name }}</td>
+                                        <td>{{ inventory.stock_in }}</td>
+                                        <td>{{ inventory.stock_out }}</td>
+                                        <td>{{ inventory.current_stock }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="9" class="text-center">Data tidak ditemukan</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
