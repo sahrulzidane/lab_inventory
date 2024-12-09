@@ -1205,6 +1205,90 @@ def stock_request_list():
     cursor.close()
     return render_template('stock_request_list.html', requests=requests)
 '''
+
+# Route Master Inventory Detail-----------------------------------------------------------------------------------------------------------------
+@app.route('/inventory_data_detail/<string:product_id>')
+def inventory_data_detail(product_id):
+    cursor = conn.cursor()
+
+    base_query = """
+        WITH stock_out_agg AS (
+            SELECT 
+                product_id,
+                batch_no,
+                SUM(stock_out_qty) AS total_stock_out
+            FROM 
+                stock_out
+            GROUP BY 
+                product_id,
+                batch_no
+        ),
+        stock_in_agg AS (
+            SELECT 
+                product_id, 
+                batch_no,
+                SUM(stock_in_qty) AS total_stock_in
+            FROM 
+                stock_in
+            GROUP BY 
+                product_id,
+                batch_no
+        )
+        SELECT 
+            p.product_id, 
+            p.product_name,
+            COALESCE(si.batch_no, so.batch_no) AS batch_no,
+            s.supp_name, 
+            m.manu_name,
+            COALESCE(si.total_stock_in, 0) AS stock_in,
+            COALESCE(so.total_stock_out, 0) AS stock_out,
+            COALESCE(si.total_stock_in, 0) - COALESCE(so.total_stock_out, 0) AS current_stock
+        FROM 
+            product p
+        LEFT JOIN 
+            supplier s ON p.supplier_id = s.supplier_id
+        LEFT JOIN 
+            manufacture m ON p.manu_id = m.manu_id
+        LEFT JOIN 
+            stock_in_agg si ON p.product_id = si.product_id
+        LEFT JOIN 
+            stock_out_agg so ON p.product_id = so.product_id AND si.batch_no = so.batch_no
+        WHERE 
+            p.product_id = :product_id
+        ORDER BY 
+            p.product_name ASC, 
+            COALESCE(si.batch_no, so.batch_no) ASC   
+
+    """
+
+    # Execute the query without any search condition
+    cursor.execute(base_query, {"product_id": product_id})
+
+    # Fetch all rows from the executed query
+    rows = cursor.fetchall()
+
+    
+
+    # Debugging: Log the number of results
+    # print(f"Number of rows returned: {len(rows)}")  # Log the number of rows returned
+
+    # Create a list of dictionaries from the fetched rows
+    inventorys = [{
+        "product_id": row[0], 
+        "product_name": row[1], 
+        "batch_no": row[2],  # Include batch_no in the inventory dictionary
+        "supp_name": row[3], 
+        "manu_name": row[4],
+        "stock_in": row[5],
+        "stock_out": row[6],
+        "current_stock": row[7]
+    } for row in rows]
+    
+    cursor.close()
+    print(inventorys)
+
+    return render_template('inventory_data_detail.html', inventorys=inventorys)
+
 @app.route('/reagent_use', methods=['GET', 'POST'])
 @login_required
 def reagent_use():
@@ -1334,6 +1418,10 @@ def report():
     cursor.close()
 
     return render_template('report.html', inventorys=inventorys)
+
+
+
+    
 '''
 if __name__ == "__main__":
     #app.run(debug=True)

@@ -62,7 +62,7 @@
                                     <td>{{ inventory.current_stock }}</td>
                                     <td>{{ inventory.safety_level }}</td>
                                     <td>
-                                        <a href="#" class="btn btn-warning btn-sm">View Detail</a>
+                                        <a href="{{ url_for('inventory_data_detail', product_id=inventory.product_id) }}" class="btn btn-warning btn-sm">View Detail</a>
                                     </td>
                                     <td>
                                         <form action="#" method="POST" onsubmit="return confirm('Hapus product ini?');">

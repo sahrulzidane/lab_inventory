@@ -1,35 +1,66 @@
+{% extends "layout.html" %}
+
+{% block content %}
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Penggunaan Reagen</title>
-    <!-- Masukkan link CSS atau framework seperti Bootstrap jika diperlukan -->
+    <title>Reagent Use</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/css/adminlte.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/fontawesome-free/css/all.min.css') }}">
+    <script src="{{ url_for('static', filename='adminlte/plugins/jquery/jquery.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='adminlte/js/adminlte.min.js') }}"></script>
+    <style>
+        .table-container {
+            margin-top: 20px;
+        }
+    </style>
 </head>
-<body>
-    <div class="container">
-        <h1>Daftar Penggunaan Reagen</h1>
-        <p>Selamat datang, {{ username }}!</p>
-        
-        <!-- Tabel untuk menampilkan data penggunaan reagen -->
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Nama Reagen</th>
-                    <th>Kuantitas Digunakan</th>
-                    <th>Tanggal Penggunaan</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for reagent in reagent_uses %}
-                    <tr>
-                        <td>{{ reagent.reagent_name }}</td>
-                        <td>{{ reagent.use_qty }}</td>
-                        <td>{{ reagent.use_date }}</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+<body class="hold-transition sidebar-mini">
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">Reagent Use</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="content">
+        <div class="container-fluid">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Reagent Usage Overview</h3>
+                </div>
+                <div class="card-body">
+                    <div class="table-container">
+                        <table class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Reagent ID</th>
+                                    <th>Reagent Name</th>
+                                    <th>Quantity Used</th>
+                                    <th>Date of Use</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for use in reagent_uses %}
+                                    <tr>
+                                        <td>{{ use.reagent_id }}</td>
+                                        <td>{{ use.reagent_name }}</td>
+                                        <td>{{ use.use_qty }}</td>
+                                        <td>{{ use.use_date }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </body>
 </html>
+{% endblock %}
