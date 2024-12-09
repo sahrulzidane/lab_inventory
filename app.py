@@ -1205,6 +1205,43 @@ def stock_request_list():
     cursor.close()
     return render_template('stock_request_list.html', requests=requests)
 '''
+@app.route('/reagent_use', methods=['GET', 'POST'])
+@login_required
+def reagent_use():
+    # Query untuk mengambil data penggunaan reagen
+    cursor = conn.cursor()
+    query_reagent_use = """
+        SELECT 
+            r.reagent_id, 
+            r.reagent_name, 
+            ru.use_qty, 
+            TO_CHAR(ru.use_date, 'YYYY-MM-DD') AS use_date
+        FROM 
+            reagent r
+        LEFT JOIN 
+            reagent_use ru ON r.reagent_id = ru.reagent_id
+        WHERE 
+            ru.use_date IS NOT NULL
+    """
+    cursor.execute(query_reagent_use)
+    rows_reagent_use = cursor.fetchall()
+
+    reagent_uses = [
+        {
+            "reagent_id": row[0],
+            "reagent_name": row[1],
+            "use_qty": row[2],
+            "use_date": row[3]
+        }
+        for row in rows_reagent_use
+    ]
+    cursor.close()
+
+    # Mendapatkan nama pengguna dari sesi
+    username = session.get('user_name', 'User')
+
+    return render_template('reagent_use.html', reagent_uses=reagent_uses, username=username)
+
 @app.route('/report')
 def report():
     cursor = conn.cursor()
@@ -1297,7 +1334,10 @@ def report():
     cursor.close()
 
     return render_template('report.html', inventorys=inventorys)
-
+'''
 if __name__ == "__main__":
     #app.run(debug=True)
-    app.run(host='HCLAB', port=5017, debug=True)
+    app.run(host='HCLAB', port=5017, debug=True)'''
+
+if __name__ == "__main__":
+    app.run(host='127.0.0.1', port=5017, debug=True)

@@ -69,8 +69,8 @@
             </div>
         </div>
         <div class="card-footer clearfix">
-            <a href="javascript:void(0)" class="btn btn-sm btn-info float-left">Add New Product</a>
-            <a href="javascript:void(0)" class="btn btn-sm btn-secondary float-right">View All Products</a>
+           <!-- <a href="javascript:void(0)" class="btn btn-sm btn-info float-left">Add New Product</a> -->
+            <a href="{{ url_for('inventory_data') }}" class="btn btn-sm btn-secondary float-right">View All Products</a>
         </div>
     </div>
 
@@ -105,7 +105,7 @@
                                 <th>Current Stock</th>
                                 <th>Safety Level</th>
                                 <th>Action</th>
-                                <th>Delete</th>
+                                <th>Edit</th>
                             </tr>
                         </thead>
                         <tbody>
