@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Penggunaan Reagen</title>
+    <!-- Masukkan link CSS atau framework seperti Bootstrap jika diperlukan -->
+</head>
+<body>
+    <div class="container">
+        <h1>Daftar Penggunaan Reagen</h1>
+        <p>Selamat datang, {{ username }}!</p>
+        
+        <!-- Tabel untuk menampilkan data penggunaan reagen -->
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Nama Reagen</th>
+                    <th>Kuantitas Digunakan</th>
+                    <th>Tanggal Penggunaan</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for reagent in reagent_uses %}
+                    <tr>
+                        <td>{{ reagent.reagent_name }}</td>
+                        <td>{{ reagent.use_qty }}</td>
+                        <td>{{ reagent.use_date }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
