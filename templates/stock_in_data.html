@@ -1,0 +1,83 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Transaksi Stock In</h1>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <!-- Bagian Tambah dan Cari -->
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <button class="btn btn-primary" onclick="window.location.href='/stock_in'">Stock In</button>
+            </div>
+            <div class="col-md-8">
+                <form method="get" action="/stockin_data">
+                    <div class="input-group">
+                        <input type="text" name="search" class="form-control" placeholder="Cari Transaksi">
+                        <button class="btn btn-secondary" type="submit">Cari</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tabel Stock In Data -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>ID Stock In</th>
+                                    <th>Stock In Date</th>
+                                    <th>Product ID</th>
+                                    <th>Product Name</th>
+                                    <th>Batch No</th>
+                                    <th>DO No</th>
+                                    <th>Stock In Qty</th>
+                                    <th>Expired Date</th>
+                                    <th>Supplier</th>
+                                    <th>Manufacture</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for si in stockindata %}
+                                <tr>
+                                    <td>{{ si.id_stock_in }}</td>
+                                    <td>{{ si.stock_in_date }}</td>
+                                    <td>{{ si.product_id }}</td>
+                                    <td>{{ si.product_name }}</td>
+                                    <td>{{ si.batch_no }}</td>
+                                    <td>{{ si.do_no }}</td>
+                                    <td>{{ si.stock_in_qty }}</td>
+                                    <td>{{ si.stock_expired }}</td>
+                                    <td>{{ si.supp_name }}</td>
+                                    <td>{{ si.manu_name }}</td>
+                                    
+                                    <td>
+                                        <a href="#" class="btn btn-dark btn-sm">Edit</a>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="3" class="text-center">Data tidak ditemukan</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

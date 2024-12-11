@@ -16,9 +16,11 @@
         <!-- Bagian Tambah dan Cari -->
         <div class="row mb-3">
             <div class="col-md-4">
-                <button class="btn btn-primary" onclick="window.location.href='/stock_in'">Stock In</button>
-                <button class="btn btn-primary" onclick="window.location.href='/stock_out'">Stock Out</button>
-                <button class="btn btn-primary" onclick="window.location.href='/tambah_product'">Discard or Item Returned</button>
+                {% if session.get('user_type') == 'inv' %}
+                    <button class="btn btn-primary" onclick="window.location.href='/stock_in'">Stock In</button>
+                    <button class="btn btn-primary" onclick="window.location.href='/stock_out'">Stock Out</button>
+                    <button class="btn btn-primary" onclick="window.location.href='/tambah_product'">Discard or Item Returned</button>
+                {% endif %}
             </div>
             <div class="col-md-8">
                 <form method="get" action="/inventory_data">

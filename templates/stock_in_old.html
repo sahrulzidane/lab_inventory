@@ -7,10 +7,10 @@
         <form method="POST" action="{{ url_for('stock_in') }}">
             <div class="form-group">
                 <label for="product_id">Product Name</label>
-                <select id="product_id" name="product_id" class="form-control select2" required>
+                <select id="product_id" name="product_id" class="form-control" required>
                     <option value="">Pilih Product</option>
                     {% for product in products %}
-                        <option value="{{ product[0] }}" data-type="{{ product[2] }}">{{ product[1] }}</option>
+                        <option value="{{ product[0] }}">{{ product[1] }}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -22,7 +22,7 @@
                     name="batch_no"
                     class="form-control"
                     placeholder="Masukkan Batch No"
-                    >
+                    required>
             </div>
             <div class="form-group">
                 <label for="do_no">DO No</label>
@@ -75,43 +75,5 @@
             <a href="{{ url_for('inventory_data') }}" class="btn btn-secondary">Cancel</a>
         </form>
     </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // Inisialisasi Select2
-            $('#product_id').select2();
-    
-            const batchInput = document.getElementById('batch_no');
-            const expiredInput = document.getElementById('stock_expired_date');
-            const form = document.querySelector('form');
-    
-            // Event listener untuk perubahan pada Select2
-            $('#product_id').on('change', function () {
-                const productType = $(this).find(':selected').data('type'); // Ambil type_id dari data-type
-    
-                if (productType === 'RG' || productType === 'BH') {
-                    // Batch No dan Expired Date wajib diisi
-                    batchInput.required = true;
-                    expiredInput.required = true;
-                } else {
-                    // Batch No dan Expired Date tidak wajib
-                    batchInput.required = false;
-                    expiredInput.required = false;
-                }
-            });
-    
-            // Validasi sebelum form submit
-            form.addEventListener('submit', function (event) {
-                const productType = $('#product_id').find(':selected').data('type');
-    
-                if ((productType === 'RG' || productType === 'BH') && (!batchInput.value || !expiredInput.value)) {
-                    alert('Batch No dan Expired Date wajib diisi untuk tipe RG atau BH.');
-                    event.preventDefault();
-                }
-            });
-        });
-    </script>
-    
-    
 
 {% endblock %}

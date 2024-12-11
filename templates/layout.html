@@ -26,110 +26,117 @@
         <!-- Sidebar -->
         <aside class="main-sidebar sidebar-white-primary elevation-4">
             <!-- Brand Logo -->
-    <!-- Brand Logo -->
-<a href="{{ url_for('index') }}" class="brand-link">
+<!-- Brand Logo -->
+<a href="{{ url_for('inventory_dashboard') if session.get('user_type') == 'inv' else url_for('index') }}" class="brand-link">
     <img src="{{ url_for('static', filename='adminlte/img/logo-rscm.jpg') }}"
          alt="Lab Inventory Logo"
          class="brand-image elevation-3"
-         style="opacity: .8; width: 80px; height: 1000px;">
+         style="opacity: .8; width: 80px; height: auto;">
     <span class="brand-text font-weight-light">Lab Inventory</span>
 </a>
 
 
+
             <!-- Sidebar -->
             <div class="sidebar">
-                <!-- Sidebar Menu -->
-                <nav class="mt-2">
-                    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
-                        <li class="nav-header">MENU</li>
-                        <li class="nav-item">
-                            <a href="#" class="nav-link">
-                                <i class="nav-icon fas fa-database"></i>
-                                <p>Master Data</p>
-                                <i class="right fas fa-angle-left"></i>
-                            </a>
-                            <ul class="nav nav-treeview">
-                                <li class="nav-item">
-                                    <a href="{{ url_for('master_unit') }}" class="nav-link">
-                                        <i class="far fa-circle nav-icon"></i>
-                                        <p>Unit</p>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{ url_for('master_location') }}" class="nav-link">
-                                        <i class="far fa-circle nav-icon"></i>
-                                        <p>Location</p>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{ url_for('master_manufacture') }}" class="nav-link">
-                                        <i class="far fa-circle nav-icon"></i>
-                                        <p>Manufacture</p>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{ url_for('master_supplier') }}" class="nav-link">
-                                        <i class="far fa-circle nav-icon"></i>
-                                        <p>Supplier</p>
-                                    </a>
-                                </li>
-                               <!--  <li class="nav-item">
-                                    <a href="#" class="nav-link">
-                                        <i class="far fa-circle nav-icon"></i>
-                                        <p>Product Type</p>
-                                    </a>
-                                </li>     -->
-                                <li class="nav-item">
-                                    <a href="{{ url_for('master_product') }}" class="nav-link">
-                                        <i class="far fa-circle nav-icon"></i>
-                                        <p>Product</p>
-                                    </a>
-                                </li>
-                                
-                            </ul>
-                        </li>
-                        <li class="nav-item">
-                            <a href="#" class="nav-link">
-                                <i class="nav-icon fas fa-exchange-alt"></i>
-                                <p>Transaksi</p>
-                                <i class="right fas fa-angle-left"></i>
-                            </a>
-                            <ul class="nav nav-treeview">
-                                <li class="nav-item">
-                                    <a href="{{ url_for('inventory_data') }}" class="nav-link">
-                                        <i class="far fa-circle nav-icon"></i>
-                                        <p>Inventory</p>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{ url_for('reagent_use') }}" class="nav-link">
-                                        <i class="far fa-circle nav-icon"></i>
-                                        <p>Penggunaan Reagen</p>
-                                    </a>
-                                </li>
-                                
-                            </ul>
-                            <li class="nav-item">
-                                <a href="{{ url_for('report') }}" class="nav-link">
-                                    <i class="nav-icon fas fa-file-alt"></i>
-                                    <p>Report</p>
-                                </a>
-                            </li>
-                            
-                            <li class="nav-item">
-                                <a href="{{ url_for('stock_request_list') }}" class="nav-link">
-                                    <i class="nav-icon fas fa-flask"></i>
-                                    <p>Lab Request</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{{ url_for('logout') }}" class="nav-link text-danger">
-                                    <i class="nav-icon fas fa-sign-out-alt"></i>
-                                    <p>Logout</p>
-                                </a>
-                            </li>
-                    </ul>
-                </nav>
+            <!-- Sidebar Menu -->
+<nav class="mt-2">
+    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+        <li class="nav-header">MENU</li>
+
+        {% if session.get('user_type') == 'inv' %}
+            <li class="nav-item">
+                <a href="#" class="nav-link">
+                    <i class="nav-icon fas fa-database"></i>
+                    <p>Master Data</p>
+                    <i class="right fas fa-angle-left"></i>
+                </a>
+                <ul class="nav nav-treeview">
+                    <li class="nav-item">
+                        <a href="{{ url_for('master_unit') }}" class="nav-link">
+                            <i class="far fa-circle nav-icon"></i>
+                            <p>Unit</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('master_location') }}" class="nav-link">
+                            <i class="far fa-circle nav-icon"></i>
+                            <p>Location</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('master_manufacture') }}" class="nav-link">
+                            <i class="far fa-circle nav-icon"></i>
+                            <p>Manufacture</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('master_supplier') }}" class="nav-link">
+                            <i class="far fa-circle nav-icon"></i>
+                            <p>Supplier</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('master_product') }}" class="nav-link">
+                            <i class="far fa-circle nav-icon"></i>
+                            <p>Product</p>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link">
+                    <i class="nav-icon fas fa-exchange-alt"></i>
+                    <p>Transaksi</p>
+                    <i class="right fas fa-angle-left"></i>
+                </a>
+                <ul class="nav nav-treeview">
+                    <li class="nav-item">
+                        <a href="{{ url_for('inventory_data') }}" class="nav-link">
+                            <i class="far fa-circle nav-icon"></i>
+                            <p>Inventory</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('reagent_use') }}" class="nav-link">
+                            <i class="far fa-circle nav-icon"></i>
+                            <p>Penggunaan Reagen</p>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+            <li class="nav-item">
+                <a href="{{ url_for('report') }}" class="nav-link">
+                    <i class="nav-icon fas fa-file-alt"></i>
+                    <p>Report</p>
+                </a>
+            </li>
+        {% endif %}
+
+        <!-- Menu untuk semua pengguna -->
+        <li class="nav-item">
+            <a href="{{ url_for('inventory_data') }}" class="nav-link">
+                <i class="nav-icon fas fa-box"></i>
+                <p>Inventory Data</p>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{{ url_for('stock_request_list') }}" class="nav-link">
+                <i class="nav-icon fas fa-flask"></i>
+                <p>Lab Request</p>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{{ url_for('logout') }}" class="nav-link text-danger">
+                <i class="nav-icon fas fa-sign-out-alt"></i>
+                <p>Logout</p>
+            </a>
+        </li>
+    </ul>
+</nav>
+
+
+
             </div>
         </aside>
 

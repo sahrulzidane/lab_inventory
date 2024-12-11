@@ -21,6 +21,7 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+'''
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -50,6 +51,45 @@ def login():
             flash('Invalid username or password.', 'danger')
 
     return render_template('login.html')
+'''
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        # Ambil data login dari form
+        user_id = request.form.get('user_id')
+        user_password = request.form.get('user_password')
+
+        # Query untuk memeriksa kredensial
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT USER_ID, USER_NAME, USER_FLAG, USER_TYPE 
+            FROM USER_TABLE 
+            WHERE (USER_ID = :user_id OR USER_NAME = :user_id) AND USER_PASSWORD = :user_password
+        """, {'user_id': user_id, 'user_password': user_password})
+        user = cursor.fetchone()
+        cursor.close()
+
+        if user:
+            if user[2] == 'Y':  # Cek apakah akun aktif
+                session['user_id'] = user[0]
+                session['user_name'] = user[1]
+                session['user_type'] = user[3]  # Simpan USER_TYPE ke dalam session
+                flash('Login successful!', 'success')
+
+                # Arahkan pengguna ke dashboard berdasarkan USER_TYPE
+                if user[3] == 'inv':
+                    return redirect(url_for('inventory_dashboard'))  # Redirect ke dashboard inventaris
+                else:
+                    return redirect(url_for('index'))  # Redirect ke halaman utama untuk USER_TYPE lain
+
+            else:
+                flash('Account suspended. Please contact the administrator.', 'danger')
+        else:
+            flash('Invalid username or password.', 'danger')
+
+    return render_template('login.html')
+
 
 
 @app.route('/logout')
@@ -57,6 +97,46 @@ def logout():
     session.clear()  # Hapus semua data sesi
     flash("You have been logged out.", "info")
     return redirect(url_for('login'))
+
+@app.route('/inventory_dashboard', methods=['GET'])
+def inventory_dashboard():
+    cursor = conn.cursor()
+
+    # Query to get the list of stock requests
+    cursor.execute("""
+        SELECT 
+            h.request_id,
+            d.product_id,
+            p.product_name,
+            l.location_name,
+            d.request_qty,
+            h.remark,
+            h.tanggal_request
+        FROM 
+            lab_request_header h
+        JOIN lab_request_detail d ON h.request_id = d.request_id
+        JOIN product p ON d.product_id = p.product_id
+        JOIN location l ON h.location_id = l.location_id
+        ORDER BY h.tanggal_request DESC
+    """)
+    requests = [{
+        "request_id": row[0],
+        "product_id": row[1],
+        "product_name": row[2],
+        "location_name": row[3],
+        "request_qty": row[4],
+        "remark": row[5],
+        "tanggal_request": row[6]
+    } for row in cursor.fetchall()]
+
+
+    cursor.close()
+
+ # Get the username from the session
+    username = session.get('user_name', 'User')
+
+    return render_template('inventory_dashboard.html', requests=requests, username=username)
+
 
 @app.route('/')
 @login_required
@@ -847,7 +927,73 @@ def inventory_data():
 
     return render_template('inventory_data.html', inventorys=inventorys)
 
+#Route Stock In
+@app.route('/stock_in', methods=['GET', 'POST'])
+def stock_in():
+    cursor = conn.cursor()
 
+    # Fetch dropdown product data
+    cursor.execute("SELECT product_id, product_name, type_id FROM product")
+    products = cursor.fetchall()
+    cursor.close()
+
+    if request.method == 'POST':
+        product_id = request.form.get('product_id')
+        batch_no = request.form.get('batch_no')
+        do_no = request.form.get('do_no')
+        stock_in_date = request.form.get('stock_in_date')
+        stock_in_qty = request.form.get('stock_in_qty')
+        stock_expired_date = request.form.get('stock_expired_date') or None
+        remarks = request.form.get('remarks') or None
+        update_by = 'RTS'
+        update_on = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+        # Validate product type
+        cursor = conn.cursor()
+        cursor.execute("SELECT type_id FROM product WHERE product_id = :product_id", {"product_id": product_id})
+        type_id = cursor.fetchone()
+        cursor.close()
+
+        if type_id in ['RG', 'BH']:
+            if not batch_no or not stock_expired_date:
+                flash("Batch No dan Expired Date wajib diisi untuk tipe RG atau BH", "danger")
+                return redirect(url_for('stock_in'))
+
+        # Fetch sequence value
+        cursor = conn.cursor()
+        cursor.execute("SELECT stock_in_seq.NEXTVAL FROM dual")
+        sequence_value = cursor.fetchone()[0]
+        cursor.close()
+
+        # Generate ID_STOCK_IN
+        id_stock_in = f"SI24{sequence_value:08d}"
+
+        # Insert data
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO stock_in (id_stock_in, product_id, batch_no, do_no, stock_in_date, stock_in_qty, stock_expired, remark, update_by, update_on)
+            VALUES (:id_stock_in, :product_id, :batch_no, :do_no, TO_DATE(:stock_in_date, 'YYYY-MM-DD'), :stock_in_qty, TO_DATE(:stock_expired_date, 'YYYY-MM-DD'), :remarks, :update_by, TO_DATE(:update_on, 'YYYY-MM-DD HH24:MI:SS'))
+        """, {
+            "id_stock_in": id_stock_in,
+            "product_id": product_id,
+            "batch_no": batch_no,
+            "do_no": do_no,
+            "stock_in_date": stock_in_date,
+            "stock_in_qty": stock_in_qty,
+            "stock_expired_date": stock_expired_date,
+            "remarks": remarks,
+            "update_by": update_by,
+            "update_on": update_on
+        })
+
+        conn.commit()
+        cursor.close()
+
+        return redirect(url_for('inventory_data'))
+
+    return render_template('stock_in.html', products=products)
+
+'''
 #Route Stock In
 @app.route('/stock_in', methods=['GET', 'POST'])
 def stock_in():
@@ -905,9 +1051,79 @@ def stock_in():
         return redirect(url_for('inventory_data'))
 
     return render_template('stock_in.html', products=products)  # Halaman untuk menambah produk
+'''
+#Route stock_in_data---------------------------------------------------------------------------------------------------------
+@app.route('/stockin_data')
+def stockin_data():
+    search_query = request.args.get('search', '')
+    cursor = conn.cursor()
 
-@app.route('/stock_out', methods=['GET', 'POST'])
-def stock_out():
+    base_query = """
+        SELECT 
+            si.id_stock_in,
+            si.stock_in_date,
+            si.product_id, 
+            p.product_name,
+            si.batch_no,
+            si.do_no,
+            si.stock_in_qty,
+            si.stock_expired,
+            s.supp_name, 
+            m.manu_name
+        FROM 
+            stock_in  si
+        LEFT JOIN
+            product p ON si.product_id = p.product_id
+        LEFT JOIN 
+            supplier s ON p.supplier_id = s.supplier_id
+        LEFT JOIN 
+            manufacture m ON p.manu_id = m.manu_id
+    """
+    if search_query:
+        search_condition = """
+            WHERE LOWER(si.id_stock_in) LIKE :search_query 
+            OR LOWER(p.product_name) LIKE :search_query 
+            OR LOWER(si.do_no) LIKE :search_query 
+            OR LOWER(s.supp_name) LIKE :search_query
+        """
+        full_query = base_query + search_condition + " ORDER BY si.stock_in_date DESC"
+        cursor.execute(full_query, {
+            "search_query": f"%{search_query.lower()}%"
+        })
+    else:
+        full_query = base_query + " ORDER BY si.stock_in_date DESC"
+        ##print(full_query)
+        cursor.execute(full_query)
+    
+
+    # Fetch all rows from the executed query
+    rows = cursor.fetchall()
+
+    # Debugging: Log the number of results
+    # print(f"Number of rows returned: {len(rows)}")  # Log the number of rows returned
+
+    # Create a list of dictionaries from the fetched rows
+    stockindata = [{
+        "id_stock_in": row[0], 
+        "stock_in_date": row[1],
+        "product_id": row[2],
+        "product_name": row[3],
+        "batch_no": row[4],
+        "do_no": row[5],
+        "stock_in_qty": row[6],
+        "stock_expired": row[7],
+        "supp_name": row[8],
+        "manu_name": row[9]
+        
+    } for row in rows]
+    
+    cursor.close()
+    print(stockindata)
+
+    return render_template('stock_in_data.html', stockindata=stockindata)
+
+@app.route('/stock_out/<string:request_id>', methods=['GET', 'POST'])
+def stock_out(request_id):
     # Membuka koneksi dan cursor
     cursor = conn.cursor()
 
@@ -965,7 +1181,16 @@ def stock_out():
 
     return render_template('stock_out.html', 
                            products=products,
+                           request_id=request_id,
                            locations=locations)  # Halaman untuk menambah produk
+
+@app.route('/get_product_type/<product_id>')
+def get_product_type(product_id):
+    cursor = conn.cursor()
+    cursor.execute("SELECT type_id FROM product WHERE product_id = :product_id", {"product_id": product_id})
+    type_id = cursor.fetchone()
+    cursor.close()
+    return jsonify({"type_id": type_id[0] if type_id else None})
 
 @app.route('/get_batches/<product_id>', methods=['GET'])
 def get_batches(product_id):
@@ -1205,6 +1430,90 @@ def stock_request_list():
     cursor.close()
     return render_template('stock_request_list.html', requests=requests)
 '''
+'''
+# Route Master Inventory Detail-----------------------------------------------------------------------------------------------------------------
+@app.route('/inventory_data_detail/<string:product_id>')
+def inventory_data_detail(product_id):
+    cursor = conn.cursor()
+
+    base_query = """
+        WITH stock_out_agg AS (
+            SELECT 
+                product_id,
+                batch_no,
+                SUM(stock_out_qty) AS total_stock_out
+            FROM 
+                stock_out
+            GROUP BY 
+                product_id,
+                batch_no
+        ),
+        stock_in_agg AS (
+            SELECT 
+                product_id, 
+                batch_no,
+                SUM(stock_in_qty) AS total_stock_in
+            FROM 
+                stock_in
+            GROUP BY 
+                product_id,
+                batch_no
+        )
+        SELECT 
+            p.product_id, 
+            p.product_name,
+            COALESCE(si.batch_no, so.batch_no) AS batch_no,
+            s.supp_name, 
+            m.manu_name,
+            COALESCE(si.total_stock_in, 0) AS stock_in,
+            COALESCE(so.total_stock_out, 0) AS stock_out,
+            COALESCE(si.total_stock_in, 0) - COALESCE(so.total_stock_out, 0) AS current_stock
+        FROM 
+            product p
+        LEFT JOIN 
+            supplier s ON p.supplier_id = s.supplier_id
+        LEFT JOIN 
+            manufacture m ON p.manu_id = m.manu_id
+        LEFT JOIN 
+            stock_in_agg si ON p.product_id = si.product_id
+        LEFT JOIN 
+            stock_out_agg so ON p.product_id = so.product_id AND si.batch_no = so.batch_no
+        WHERE 
+            p.product_id = :product_id
+        ORDER BY 
+            p.product_name ASC, 
+            COALESCE(si.batch_no, so.batch_no) ASC   
+
+    """
+
+    # Execute the query without any search condition
+    cursor.execute(base_query, {"product_id": product_id})
+
+    # Fetch all rows from the executed query
+    rows = cursor.fetchall()
+
+    
+
+    # Debugging: Log the number of results
+    # print(f"Number of rows returned: {len(rows)}")  # Log the number of rows returned
+
+    # Create a list of dictionaries from the fetched rows
+    inventorys = [{
+        "product_id": row[0], 
+        "product_name": row[1], 
+        "batch_no": row[2],  # Include batch_no in the inventory dictionary
+        "supp_name": row[3], 
+        "manu_name": row[4],
+        "stock_in": row[5],
+        "stock_out": row[6],
+        "current_stock": row[7]
+    } for row in rows]
+    
+    cursor.close()
+    print(inventorys)
+
+    return render_template('inventory_data_detail.html', inventorys=inventorys)
+'''
 
 # Route Master Inventory Detail-----------------------------------------------------------------------------------------------------------------
 @app.route('/inventory_data_detail/<string:product_id>')
@@ -1419,13 +1728,6 @@ def report():
 
     return render_template('report.html', inventorys=inventorys)
 
-
-
-    
-'''
-if __name__ == "__main__":
-    #app.run(debug=True)
-    app.run(host='HCLAB', port=5017, debug=True)'''
 
 if __name__ == "__main__":
     app.run(host='127.0.0.1', port=5017, debug=True)
