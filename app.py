@@ -4,6 +4,8 @@ from datetime import datetime
 import cx_Oracle
 from openpyxl import Workbook
 from io import BytesIO
+import pandas as pd
+from flask import send_file
 
 app = Flask(__name__)
 app.secret_key = 'saba_1234'
@@ -1124,65 +1126,258 @@ def stockin_data():
 
 @app.route('/stock_out/<string:request_id>', methods=['GET', 'POST'])
 def stock_out(request_id):
-    # Membuka koneksi dan cursor
+    # Open a cursor to fetch data
     cursor = conn.cursor()
 
-    # Dropdown product_id
-    cursor.execute("SELECT product_id, product_name FROM product")
-    products = cursor.fetchall()
-    # dropdown location
-    cursor.execute("SELECT location_id, location_name FROM location")
-    locations = cursor.fetchall()
+    # Fetch product_id and qty from lab_request_detail based on request_id
+    cursor.execute("""
+        SELECT lr.product_id, p.product_name, lr.request_qty
+        FROM lab_request_detail lr
+        JOIN product p ON lr.product_id = p.product_id
+        WHERE lr.request_id = :request_id
+    """, {"request_id": request_id})
+    lab_request_details = cursor.fetchall()
+    lab_request_details = [
+        {
+            "product_id": row[0],
+            "product_name": row[1],
+            "request_qty": row[2]
+        }
+        for row in lab_request_details
+    ]
+
+    # Fetch batch numbers for stock out
+    cursor.execute("""
+        SELECT s.batch_no
+        FROM lab_request_detail lr
+        JOIN product p ON lr.product_id = p.product_id
+        JOIN stock_in s ON lr.product_id = s.product_id
+        WHERE lr.request_id = :request_id
+    """, {"request_id": request_id})
+    batches = cursor.fetchall()
+
+    # Fetch location_id and other details from lab_request_header based on request_id
+    cursor.execute("""
+        SELECT lh.request_id, lh.tanggal_request, lh.user_id , u.user_name, lh.location_id, l.location_name
+        FROM lab_request_header lh
+        JOIN location l ON lh.location_id = l.location_id
+        JOIN USER_TABLE u ON lh.user_id = u.user_id
+        WHERE lh.request_id = :request_id
+    """, {"request_id": request_id})
+    header_data = cursor.fetchone()
+
+    # Prepare location and additional details
+    if header_data:
+        header = {
+            "request_id": header_data[0],
+            "tanggal_request": header_data[1].strftime('%Y-%m-%d'),  # Format date
+            "user_id": header_data[2],
+            "user_name": header_data[3],
+            "location_id": header_data[4],
+            "location_name": header_data[5]
+        }
+    else:
+        # Define location as an empty dictionary or None to avoid undefined error
+        location = {
+            "request_id": None,
+            "tanggal_request": None,
+            "user_id": None,
+            "location_id": None,
+            "location_name": "Unknown"  # Default value if not found
+        }
 
     cursor.close()
 
     if request.method == 'POST':
-        product_id = request.form.get('product_id')  # Ambil product_id dari form
+        # Handle form submission for stock out
         batch_no = request.form.get('batch_no')
         stock_out_date = request.form.get('stock_out_date')
-        stock_out_qty = request.form.get('stock_out_qty')
-        location_id = request.form.get('location_id')
         remarks = request.form.get('remarks') or None
         update_by = 'RTS'
         update_on = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-        # Ambil nilai dari sequence
+        # Iterate through each product_id and qty from lab_request_detail
         cursor = conn.cursor()
-        cursor.execute("SELECT stock_out_seq.NEXTVAL FROM dual")
-        sequence_value = cursor.fetchone()[0]
-        cursor.close()
+        for detail in lab_request_details:
+            product_id = detail['product_id']
+            stock_out_qty = detail['request_qty']
 
-        # Format ID_STOCK_out
-        id_stock_out = f"SO24{sequence_value:08d}"  # Format SO24000001
+            # Get the next value from the sequence for ID_STOCK_OUT
+            cursor.execute("SELECT stock_out_seq.NEXTVAL FROM dual")
+            sequence_value = cursor.fetchone()[0]
 
-        # Membuka koneksi dan cursor untuk INSERT
-        cursor = conn.cursor()
+            # Format ID_STOCK_OUT
+            id_stock_out = f"SO24{sequence_value:08d}"  # Format SO24000001
 
-        # Step 3: Insert the new product with the selected product_id
-        cursor.execute("""
-            INSERT INTO stock_out (id_stock_out, product_id, batch_no, stock_out_date, stock_out_qty, location_id, remark, update_by, update_on)
-            VALUES (:id_stock_out, :product_id, :batch_no, TO_DATE(:stock_out_date, 'YYYY-MM-DD'), :stock_out_qty, :location_id, :remarks, :update_by, TO_DATE(:update_on, 'YYYY-MM-DD HH24:MI:SS'))
-        """, {
-            "id_stock_out": id_stock_out,
-            "product_id": product_id,  # Pastikan product_id diambil dari form
-            "batch_no": batch_no,
-            "stock_out_date": stock_out_date,
-            "stock_out_qty": stock_out_qty,
-            "location_id": location_id,
-            "remarks": remarks,
-            "update_by": update_by,
-            "update_on": update_on
-        })
+            # Insert data into stock_out table
+            cursor.execute("""
+                INSERT INTO stock_out (
+                    id_stock_out, product_id, batch_no, stock_out_date, stock_out_qty, location_id, remark, update_by, update_on
+                ) VALUES (
+                    :id_stock_out, :product_id, :batch_no, TO_DATE(:stock_out_date, 'YYYY-MM-DD'), :stock_out_qty, :location_id, :remarks, :update_by, TO_DATE(:update_on, 'YYYY-MM-DD HH24:MI:SS')
+                )
+            """, {
+                "id_stock_out": id_stock_out,
+                "product_id": product_id,
+                "batch_no": batch_no,
+                "stock_out_date": stock_out_date,
+                "stock_out_qty": stock_out_qty,
+                "location_id": location['location_id'],
+                "remarks": remarks,
+                "update_by": update_by,
+                "update_on": update_on
+            })
 
+        # Commit the transaction
         conn.commit()
         cursor.close()
 
         return redirect(url_for('inventory_data'))
 
     return render_template('stock_out.html', 
-                           products=products,
+                           lab_request_details=lab_request_details,
                            request_id=request_id,
-                           locations=locations)  # Halaman untuk menambah produk
+                           batches=batches,
+                           header=header)
+
+@app.route('/save_stock_out', methods=['POST'])
+def save_stock_out():
+    data = request.json
+    print(data)  # Log data yang diterima
+
+    location_id = data.get('location_id')
+    added_items = data.get('added_items')
+    request_id = data.get('request_id')  # Ambil request_id dari data
+
+    try:
+        cursor = conn.cursor()
+
+        # Ambil sequence untuk ID_STOCK_OUT
+        sequence_number = cursor.execute("SELECT stock_out_seq.NEXTVAL FROM dual").fetchone()[0]
+
+        # Format ID_STOCK_OUT
+        current_date = datetime.now()
+        formatted_id = f"SO{current_date.strftime('%y%m%d')}{str(sequence_number).zfill(3)}"
+
+        # Simpan ke stock_out_header
+        cursor.execute('''
+            INSERT INTO stock_out_header (ID_STOCK_OUT, STOCK_OUT_DATE, LOCATION_ID, UPDATE_BY, UPDATE_ON, REQUEST_ID)
+            VALUES (:id_stock_out, SYSDATE, :location_id, 'ZDN', SYSDATE, :request_id)
+        ''', {
+            'id_stock_out': formatted_id,
+            'location_id': location_id,
+            'request_id': request_id  # Menyimpan request_id
+        })
+
+        # Simpan ke stock_out untuk setiap item yang ditambahkan
+        for item in added_items:
+            cursor.execute('''
+                INSERT INTO stock_out (ID_STOCK_OUT, PRODUCT_ID, BATCH_NO, STOCK_OUT_QTY, UPDATE_BY, UPDATE_ON)
+                VALUES (:stock_out_id, :product_id, :batch_no, :stock_out_qty, 'ZDN', SYSDATE)
+            ''', {
+                'stock_out_id': formatted_id,  # Menggunakan ID_STOCK_OUT yang sama
+                'product_id': item['product_id'],
+                'batch_no': item['batch_no'],
+                'stock_out_qty': item['qty']
+            })
+
+            # Update lab_request_detail untuk kolom id_stock_out
+            cursor.execute('''
+                UPDATE lab_request_detail
+                SET ID_STOCK_OUT = :stock_out_id
+                WHERE REQUEST_ID = :request_id AND PRODUCT_ID = :product_id
+            ''', {
+                'stock_out_id': formatted_id,
+                'request_id': request_id,
+                'product_id': item['product_id']
+            })
+
+        # Commit dan tutup koneksi
+        conn.commit()
+        cursor.close()
+
+        return jsonify({'message': 'Data saved successfully', 'redirect_url': url_for('inventory_data')}), 201
+        
+    except Exception as e:
+        print("Error:", e)  # Log kesalahan
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/fetch_item_data/<string:product_id>', methods=['GET'])
+def fetch_item_data(product_id):
+    cursor = conn.cursor()
+
+    # Execute the SQL query to fetch item data
+    cursor.execute("""
+        WITH stock_out_agg AS (
+            SELECT 
+                product_id,
+                batch_no,
+                SUM(stock_out_qty) AS total_stock_out
+            FROM 
+                stock_out
+            GROUP BY 
+                product_id,
+                batch_no
+        ),
+        stock_in_agg AS (
+            SELECT 
+                product_id, 
+                batch_no,
+                stock_expired,
+                SUM(stock_in_qty) AS total_stock_in
+            FROM 
+                stock_in
+            GROUP BY 
+                product_id,
+                batch_no,
+                stock_expired
+        )
+        SELECT 
+            p.product_id, 
+            p.product_name,
+            COALESCE(si.batch_no, so.batch_no) AS batch_no,
+            si.stock_expired,
+            COALESCE(si.total_stock_in, 0) AS stock_in,
+            COALESCE(so.total_stock_out, 0) AS stock_out,
+            COALESCE(si.total_stock_in, 0) - COALESCE(so.total_stock_out, 0) AS current_stock
+        FROM 
+            product p
+        LEFT JOIN 
+            supplier s ON p.supplier_id = s.supplier_id
+        LEFT JOIN 
+            manufacture m ON p.manu_id = m.manu_id
+        LEFT JOIN 
+            stock_in_agg si ON p.product_id = si.product_id
+        LEFT JOIN 
+            stock_out_agg so ON p.product_id = so.product_id AND si.batch_no = so.batch_no
+        WHERE 
+            p.product_id = :product_id and
+            COALESCE(si.total_stock_in, 0) - COALESCE(so.total_stock_out, 0) > 0
+        ORDER BY 
+            p.product_name ASC, 
+            si.stock_expired ASC,
+            COALESCE(si.batch_no, so.batch_no) ASC
+    """, {"product_id": product_id})
+
+    # Fetch the results
+    items = cursor.fetchall()
+    cursor.close()
+
+    # Prepare the data for JSON response
+    result = []
+    for row in items:
+        result.append({
+            "product_id": row[0],
+            "product_name": row[1],
+            "batch_no": row[2],
+            "stock_expired": row[3].strftime('%Y-%m-%d') if row[3] else None,
+            "stock_in": row[4],
+            "stock_out": row[5],
+            "current_stock": row[6]
+        })
+
+    return jsonify(result)                
 
 @app.route('/get_product_type/<product_id>')
 def get_product_type(product_id):
@@ -1515,6 +1710,32 @@ def inventory_data_detail(product_id):
     return render_template('inventory_data_detail.html', inventorys=inventorys)
 '''
 
+@app.route('/transfer_item', methods=['GET', 'POST'])
+def transfer_item():
+    if request.method == 'POST':
+        data = request.get_json()
+        location_id = data['location_id']
+        added_items = data['added_items']
+
+        # Simpan transfer detail ke database
+        for item in added_items:
+            transfer_detail = TransferDetail(
+                transfer_id=1,  # Ganti dengan ID transfer yang sesuai
+                product_id=item['product_id'],
+                loc_from='Current Warehouse',  # Ganti dengan lokasi asal
+                loc_to=location_id,
+                batch_no=item['batch_no'],
+                transfer_qty=item['qty']
+            )
+            db.session.add(transfer_detail)
+
+        db.session.commit()
+        return jsonify({'message': 'Transfer successful!', 'redirect_url': '/'}), 200
+
+    # Jika GET, tampilkan halaman transfer
+    return render_template('transfer.html')
+
+
 # Route Master Inventory Detail-----------------------------------------------------------------------------------------------------------------
 @app.route('/inventory_data_detail/<string:product_id>')
 def inventory_data_detail(product_id):
@@ -1597,7 +1818,7 @@ def inventory_data_detail(product_id):
     print(inventorys)
 
     return render_template('inventory_data_detail.html', inventorys=inventorys)
-
+                           
 @app.route('/reagent_use', methods=['GET', 'POST'])
 @login_required
 def reagent_use():
@@ -1634,6 +1855,7 @@ def reagent_use():
     username = session.get('user_name', 'User')
 
     return render_template('reagent_use.html', reagent_uses=reagent_uses, username=username)
+
 
 @app.route('/report')
 def report():
@@ -1727,6 +1949,104 @@ def report():
     cursor.close()
 
     return render_template('report.html', inventorys=inventorys)
+
+@app.route('/download_report', methods=['GET'])
+def download_report():
+    cursor = conn.cursor()
+
+    # Ambil parameter filter dari query string
+    product_name = request.args.get('product_name', '').lower()
+    supplier_name = request.args.get('supplier_name', '').lower()
+    date_from = request.args.get('date_from', '')
+    date_to = request.args.get('date_to', '')
+
+    # Base query
+    base_query = """
+        WITH stock_out_agg AS (
+            SELECT 
+                product_id, 
+                SUM(stock_out_qty) AS total_stock_out
+            FROM 
+                stock_out
+            GROUP BY 
+                product_id
+        ),
+        stock_in_agg AS (
+            SELECT 
+                product_id, 
+                SUM(stock_in_qty) AS total_stock_in
+            FROM 
+                stock_in
+            GROUP BY 
+                product_id
+        )
+        SELECT 
+            p.product_id, 
+            p.product_name, 
+            s.supp_name, 
+            m.manu_name,
+            COALESCE(si.total_stock_in, 0) AS stock_in,
+            COALESCE(so.total_stock_out, 0) AS stock_out,
+            COALESCE(si.total_stock_in, 0) - COALESCE(so.total_stock_out, 0) AS current_stock,
+            p.safety_level
+        FROM 
+            product p
+        LEFT JOIN 
+            supplier s ON p.supplier_id = s.supplier_id
+        LEFT JOIN 
+            manufacture m ON p.manu_id = m.manu_id
+        LEFT JOIN 
+            stock_in_agg si ON p.product_id = si.product_id
+        LEFT JOIN 
+            stock_out_agg so ON p.product_id = so.product_id
+    """
+
+    # Tambahkan kondisi berdasarkan filter
+    conditions = []
+    params = {}
+
+    if product_name:
+        conditions.append("LOWER(p.product_name) LIKE :product_name")
+        params["product_name"] = f"%{product_name}%"
+
+    if supplier_name:
+        conditions.append("LOWER(s.supp_name) LIKE :supplier_name")
+        params["supplier_name"] = f"%{supplier_name}%"
+
+    if date_from:
+        conditions.append("EXISTS (SELECT 1 FROM stock_in WHERE stock_in.product_id = p.product_id AND stock_in_date >= TO_DATE(:date_from, 'YYYY-MM-DD'))")
+        params["date_from"] = date_from
+
+    if date_to:
+        conditions.append("EXISTS (SELECT 1 FROM stock_in WHERE stock_in.product_id = p.product_id AND stock_in_date <= TO_DATE(:date_to, 'YYYY-MM-DD'))")
+        params["date_to"] = date_to
+
+    # Gabungkan kondisi ke query
+    if conditions:
+        base_query += " WHERE " + " AND ".join(conditions)
+
+    base_query += " ORDER BY p.product_name ASC"
+
+    # Eksekusi query
+    cursor.execute(base_query, params)
+    inventorys = [{
+        "product_id": row[0],
+        "product_name": row[1],
+        "supp_name": row[2],
+        "manu_name": row[3],
+        "stock_in": row[4],
+        "stock_out": row[5],
+        "current_stock": row[6],
+        "safety_level": row[7]
+    } for row in cursor.fetchall()]
+    cursor.close()
+
+    # Simpan data ke file Excel
+    df = pd.DataFrame(inventorys)
+    file_path = 'inventory_report.xlsx'
+    df.to_excel(file_path, index=False, engine='openpyxl')
+
+    return send_file(file_path, as_attachment=True)
 
 
 if __name__ == "__main__":

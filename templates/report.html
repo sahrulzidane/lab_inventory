@@ -76,8 +76,9 @@
                     <div class="card">
                         <div class="card-header">
                             <h3 class="card-title">Inventory Overview</h3>
+                            
                             <div class="card-tools">
-                                <a href="{{ url_for('report') }}" class="btn btn-success">
+                                <a href="{{ url_for('download_report', product_name=request.args.get('product_name', ''), supplier_name=request.args.get('supplier_name', ''), date_from=request.args.get('date_from', ''), date_to=request.args.get('date_to', ''))  }}" class="btn btn-success">
                                     <i class="fas fa-download"></i> Download Report
                                 </a>
                             </div>

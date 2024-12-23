@@ -8,9 +8,11 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/select2/css/select2.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css') }}">        
     <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/fontawesome-free/css/all.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/css/bootstrap.min.css') }}">
     <script src="{{ url_for('static', filename='adminlte/plugins/jquery/jquery.min.js') }}"></script>
     <script src="{{ url_for('static', filename='adminlte/js/adminlte.min.js') }}"></script>
     <script src="{{ url_for('static', filename='adminlte/plugins/select2/js/select2.full.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='adminlte/js/bootstrap.bundle.min.js') }}"></script>
 </head>
 <body class="hold-transition sidebar-mini">
     <div class="wrapper">
@@ -85,16 +87,29 @@
                 </ul>
             </li>
             <li class="nav-item">
+                <a href="{{ url_for('inventory_data') }}" class="nav-link">
+                    <i class="nav-icon fas fa-box"></i>
+                    <p>Inventory Data</p>
+                </a>
+            </li>
+            <li class="nav-item">
                 <a href="#" class="nav-link">
                     <i class="nav-icon fas fa-exchange-alt"></i>
                     <p>Transaksi</p>
                     <i class="right fas fa-angle-left"></i>
                 </a>
                 <ul class="nav nav-treeview">
+                    
                     <li class="nav-item">
-                        <a href="{{ url_for('inventory_data') }}" class="nav-link">
+                        <a href="{{ url_for('stock_in') }}" class="nav-link">
                             <i class="far fa-circle nav-icon"></i>
-                            <p>Inventory</p>
+                            <p>Stock In</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('transfer_item') }}" class="nav-link">
+                            <i class="far fa-circle nav-icon"></i>
+                            <p>Transfer Item</p>
                         </a>
                     </li>
                     <li class="nav-item">
@@ -114,12 +129,7 @@
         {% endif %}
 
         <!-- Menu untuk semua pengguna -->
-        <li class="nav-item">
-            <a href="{{ url_for('inventory_data') }}" class="nav-link">
-                <i class="nav-icon fas fa-box"></i>
-                <p>Inventory Data</p>
-            </a>
-        </li>
+       
         <li class="nav-item">
             <a href="{{ url_for('stock_request_list') }}" class="nav-link">
                 <i class="nav-icon fas fa-flask"></i>

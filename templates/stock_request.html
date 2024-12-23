@@ -1,68 +1,245 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stock Request</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
-</head>
-<body>
-    <div class="container mt-5">
-        <h1 class="text-center">Form Permintaan Stok</h1>
-        <form action="{{ url_for('stock_request') }}" method="POST" class="needs-validation" novalidate>
-            <div class="mb-3">
-                <label for="product_id" class="form-label">Pilih Produk:</label>
-                <select name="product_id" id="product_id" class="form-select" required>
-                    {% for product in products %}
-                        <option value="{{ product[0] }}">{{ product[1] }}</option>
-                    {% endfor %}
-                </select>
-                <div class="invalid-feedback">Silakan pilih produk.</div>
-            </div>
 
-            <div class="mb-3">
-                <label for="location_id" class="form-label">Pilih Lokasi (Lab/Gudang):</label>
-                <select name="location_id" id="location_id" class="form-select" required>
-                    {% for location in locations %}
-                        <option value="{{ location[0] }}">{{ location[1] }}</option>
-                    {% endfor %}
-                </select>
-                <div class="invalid-feedback">Silakan pilih lokasi.</div>
-            </div>
-
-            <div class="mb-3">
-                <label for="request_qty" class="form-label">Jumlah Permintaan:</label>
-                <input type="number" name="request_qty" id="request_qty" class="form-control" required>
-                <div class="invalid-feedback">Silakan masukkan jumlah permintaan.</div>
-            </div>
-
-            <div class="mb-3">
-                <label for="remarks" class="form-label">Catatan Tambahan:</label>
-                <textarea name="remarks" id="remarks" class="form-control" rows="3"></textarea>
-            </div>
-
-            <button type="submit" class="btn btn-primary w-100">Kirim Permintaan</button>
-        </form>
+<div class="container">
+    <h1>Stock Out Request</h1>
+    <div class="card">
+        <div class="card-body">
+            <label>Request ID:</label> 
+            <input type="text" name="request_id" value="{{ request_id }}" class="form-control" readonly><br>
+            <label>Tanggal Permohonan:</label> 
+            <input type="text" name="tanggal_request" value="{{ header.tanggal_request }}" class="form-control" readonly><br>
+            <label>Nama Pemohon:</label> 
+            <input type="text" name="nama_pemohon" value="{{ header.user_name }}" class="form-control" readonly><br>
+            <label>Placement:</label> 
+            <input type="text" name="placementid" value="{{ header.location_id }}" class="form-control" readonly><br>
+            <input type="text" name="placement" value="{{ header.location_name }}" class="form-control" readonly><br>
+        </div>
     </div>
 
-    <script>
-        // Bootstrap validation script
-        (function () {
-            'use strict'
-            var forms = document.querySelectorAll('.needs-validation')
-            Array.prototype.slice.call(forms).forEach(function (form) {
-                form.addEventListener('submit', function (event) {
-                    if (!form.checkValidity()) {
-                        event.preventDefault()
-                        event.stopPropagation()
-                    }
-                    form.classList.add('was-validated')
-                }, false)
-            })
-        })()
-    </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
-{% endblock content %}
+    <div class="card mt-3">
+        <div class="card-body">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Product ID</th>
+                        <th>Product Name</th>
+                        <th>Qty</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for detail in lab_request_details %}
+                    <tr>
+                        <td>{{ detail.product_id }}</td>
+                        <td>{{ detail.product_name }}</td>
+                        <td>{{ detail.request_qty }}</td>
+                        <td><span class="collapse-button" data-product-id="{{ detail.product_id }}">+</span></td>
+                    </tr>
+                    <tr class="collapse-item">
+                        <td colspan="4">
+                            <div>
+                                <button class="btn btn-primary mb-2 add-item-button" data-product-id="{{ detail.product_id }}">Add Item</button>
+                            </div>
+                            <table class="table table-bordered mt-2">
+                                <thead>
+                                    <tr>
+                                        <th>Product ID</th>
+                                        <th>Product Name</th>
+                                        <th>Batch No</th>
+                                        <th>Expired Date</th>
+                                        <th>Current Stock</th>
+                                        <th>Qty</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="added-items">
+                                    <!-- Baris yang ditambahkan akan muncul di sini -->
+                                </tbody>
+                            </table>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <div class="d-flex justify-content-end mt-3">
+                <button class="btn btn-primary mb-1" id="saveButton">Save</button>
+                <button class="btn btn-secondary mb-1" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="itemModal" tabindex="-1" role="dialog" aria-labelledby="itemModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="itemModalLabel">Item Details</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <table class="table table-bordered" id="itemDetailsTable">
+                    <thead>
+                        <tr>
+                            <th>Product ID</th>
+                            <th>Product Name</th>
+                            <th>Batch No</th>
+                            <th>Expired Date</th>
+                            <th>Current Stock</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Dynamic content will be inserted here -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .collapse-item {
+        display: none;
+    }
+    .collapse-button {
+        cursor: pointer;
+    }
+</style>
+
+<script>
+    $(document).ready(function() {
+        $('.collapse-button').click(function() {
+            $(this).closest('tr').next('.collapse-item').toggle();
+        });
+
+        var addedItemsTable; // Simpan referensi global sementara
+
+        $('.add-item-button').click(function() {
+            addedItemsTable = $(this).closest('.collapse-item').find('.added-items'); // Simpan referensi
+            $('#itemDetailsTable tbody').empty(); // Bersihkan data sebelumnya
+
+            // Fetch item data
+            var productId = $(this).data('product-id');
+            $.ajax({
+                url: '/fetch_item_data/' + productId,
+                method: 'GET',
+                success: function(data) {
+                    data.forEach(function(item) {
+                        $('#itemDetailsTable tbody').append(`
+                            <tr>
+                                <td>${item.product_id}</td>
+                                <td>${item.product_name}</td>
+                                <td>${item.batch_no}</td>
+                                <td>${item.stock_expired || 'N/A'}</td>
+                                <td>${item.current_stock}</td>
+                                <td><button class="btn btn-primary select-item" data-item='${JSON.stringify(item).replace(/'/g, '&#39;')}'>Pilih</button></td>
+                            </tr>
+                        `);
+                    });
+                    $('#itemModal').modal('show');
+                },
+                error: function() {
+                    alert('Error fetching item data.');
+                }
+            });
+        });
+
+        $(document).on('click', '.select-item', function() {
+            var selectedItem = $(this).data('item');
+            if (!selectedItem) {
+                console.error('Selected item is undefined');
+                return;
+            }
+
+            var addedRow = `
+                <tr>
+                    <td>${selectedItem.product_id}</td>
+                    <td>${selectedItem.product_name}</td>
+                    <td>${selectedItem.batch_no}</td>
+                    <td>${selectedItem.stock_expired || 'N/A'}</td>
+                    <td>${selectedItem.current_stock}</td>
+                    <td><input type="number" class="form-control" value="0" min="0"></td>
+                </tr>
+            `;
+
+            if (addedItemsTable) {
+                addedItemsTable.append(addedRow);
+                $('#itemModal').modal('hide');
+            } else {
+                console.error('Added items table reference is missing');
+            }
+        });
+
+        // Fungsi untuk menyimpan data
+        $('#saveButton').click(function() {
+            var addedItems = [];
+            var isValid = true; // Flag untuk validasi
+
+            $('.added-items tr').each(function() {
+                var productId = $(this).find('td:eq(0)').text();
+                var batchNo = $(this).find('td:eq(2)').text();
+                var qty = $(this).find('input[type="number"]').val();
+                var currentStock = $(this).find('td:eq(4)').text(); // Ambil current stock dari kolom yang sesuai
+
+                // Validasi qty tidak boleh lebih dari current stock
+                if (parseInt(qty) > parseInt(currentStock)) {
+                    alert('Periksa lagi inputan qty anda untuk Product ID: ' + productId + '. Maksimum qty adalah ' + currentStock);
+                    isValid = false; // Set flag validasi ke false
+                    return false; // Keluar dari each loop
+                }
+
+                if (productId && batchNo && qty) {
+                    addedItems.push({
+                        product_id: productId,
+                        batch_no: batchNo,
+                        qty: qty
+                    });
+                }
+            });
+
+            // Jika validasi gagal, tidak lanjutkan ke pengiriman data
+            if (!isValid) {
+                return; // Hentikan eksekusi fungsi
+            }
+
+            var locationId = $('input[name="placementid"]').val(); // Ambil location_id dari input placement
+
+            // Log data yang akan dikirim
+            console.log(JSON.stringify({
+                location_id: locationId,
+                added_items: addedItems,
+                request_id: $('input[name="request_id"]').val()  // Ambil request_id dari input
+            }));
+
+            // Kirim data ke server
+            $.ajax({
+                url: '/transfer_item',  // Ganti dengan rute yang sesuai
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    location_id: locationId,
+                    added_items: addedItems,
+                    request_id: $('input[name="request_id"]').val()  // Ambil request_id dari input
+                }),
+                success: function(response) {
+                    alert(response.message);
+                    window.location.href = response.redirect_url;
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', error);
+                    console.error('Response:', xhr.responseText);
+                    alert('Error saving data: ' + xhr.responseText);
+                }
+            });
+        });
+    });
+</script>
+
+{% endblock %}

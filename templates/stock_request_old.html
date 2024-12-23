@@ -1,0 +1,68 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Request</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center">Form Permintaan Stok</h1>
+        <form action="{{ url_for('stock_request') }}" method="POST" class="needs-validation" novalidate>
+            <div class="mb-3">
+                <label for="product_id" class="form-label">Pilih Produk:</label>
+                <select name="product_id" id="product_id" class="form-select" required>
+                    {% for product in products %}
+                        <option value="{{ product[0] }}">{{ product[1] }}</option>
+                    {% endfor %}
+                </select>
+                <div class="invalid-feedback">Silakan pilih produk.</div>
+            </div>
+
+            <div class="mb-3">
+                <label for="location_id" class="form-label">Pilih Lokasi (Lab/Gudang):</label>
+                <select name="location_id" id="location_id" class="form-select" required>
+                    {% for location in locations %}
+                        <option value="{{ location[0] }}">{{ location[1] }}</option>
+                    {% endfor %}
+                </select>
+                <div class="invalid-feedback">Silakan pilih lokasi.</div>
+            </div>
+
+            <div class="mb-3">
+                <label for="request_qty" class="form-label">Jumlah Permintaan:</label>
+                <input type="number" name="request_qty" id="request_qty" class="form-control" required>
+                <div class="invalid-feedback">Silakan masukkan jumlah permintaan.</div>
+            </div>
+
+            <div class="mb-3">
+                <label for="remarks" class="form-label">Catatan Tambahan:</label>
+                <textarea name="remarks" id="remarks" class="form-control" rows="3"></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">Kirim Permintaan</button>
+        </form>
+    </div>
+
+    <script>
+        // Bootstrap validation script
+        (function () {
+            'use strict'
+            var forms = document.querySelectorAll('.needs-validation')
+            Array.prototype.slice.call(forms).forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault()
+                        event.stopPropagation()
+                    }
+                    form.classList.add('was-validated')
+                }, false)
+            })
+        })()
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+{% endblock content %}

@@ -3,7 +3,7 @@
 {% block content %}
 
 <div class="container">
-    <h1>Stock Out Request</h1>
+    <h1>Transfer Item</h1>
     <div class="card">
         <div class="card-body">
             <label>Request ID:</label> 
@@ -59,13 +59,11 @@
                             </table>
                         </td>
                     </tr>
-
                     {% endfor %}
                 </tbody>
-                
             </table>
             <div class="d-flex justify-content-end mt-3">
-                <button class="btn btn-primary mb-1" id="saveButton">Save</button>
+                <button class="btn btn-primary mb-1" id="saveButton">Transfer</button>
                 <button class="btn btn-secondary mb-1" data-dismiss="modal">Cancel</button>
             </div>
         </div>
@@ -114,6 +112,7 @@
         cursor: pointer;
     }
 </style>
+
 <script>
     $(document).ready(function() {
         $('.collapse-button').click(function() {
@@ -122,69 +121,63 @@
 
         var addedItemsTable; // Simpan referensi global sementara
 
-$('.add-item-button').click(function() {
-    addedItemsTable = $(this).closest('.collapse-item').find('.added-items'); // Simpan referensi
-    $('#itemDetailsTable tbody').empty(); // Bersihkan data sebelumnya
+        $('.add-item-button').click(function() {
+            addedItemsTable = $(this).closest('.collapse-item').find('.added-items'); // Simpan referensi
+            $('#itemDetailsTable tbody').empty(); // Bersihkan data sebelumnya
 
-    // Fetch item data
-    var productId = $(this).data('product-id');
-    $.ajax({
-        url: '/fetch_item_data/' + productId,
-        method: 'GET',
-        success: function(data) {
-            data.forEach(function(item) {
-                $('#itemDetailsTable tbody').append(`
-                    <tr>
-                        <td>${item.product_id}</td>
-                        <td>${item.product_name}</td>
-                        <td>${item.batch_no}</td>
-                        <td>${item.stock_expired || 'N/A'}</td>
-                        <td>${item.current_stock}</td>
-                        <td><button class="btn btn-primary select-item" data-item='${JSON.stringify(item).replace(/'/g, '&#39;')}'>Pilih</button></td>
-                    </tr>
-                `);
+            // Fetch item data
+            var productId = $(this).data('product-id');
+            $.ajax({
+                url: '/fetch_item_data/' + productId,
+                method: 'GET',
+                success: function(data) {
+                    data.forEach(function(item) {
+                        $('#itemDetailsTable tbody').append(`
+                            <tr>
+                                <td>${item.product_id}</td>
+                                <td>${item.product_name}</td>
+                                <td>${item.batch_no}</td>
+                                <td>${item.stock_expired || 'N/A'}</td>
+                                <td>${item.current_stock}</td>
+                                <td><button class="btn btn-primary select-item" data-item='${JSON.stringify(item).replace(/'/g, '&#39;')}'>Pilih</button></td>
+                            </tr>
+                        `);
+                    });
+                    $('#itemModal').modal('show');
+                },
+                error: function() {
+                    alert('Error fetching item data.');
+                }
             });
-            $('#itemModal').modal('show');
-        },
-        error: function() {
-            alert('Error fetching item data.');
-        }
-    });
-});
+        });
 
-$(document).on('click', '.select-item', function() {
-    var selectedItem = $(this).data('item');
-    if (!selectedItem) {
-        console.error('Selected item is undefined');
-        return;
-    }
+        $(document).on('click', '.select-item', function() {
+            var selectedItem = $(this).data('item');
+            if (!selectedItem) {
+                console.error('Selected item is undefined');
+                return;
+            }
 
-    var addedRow = `
-        <tr>
-            <td>${selectedItem.product_id}</td>
-            <td>${selectedItem.product_name}</td>
-            <td>${selectedItem.batch_no}</td>
-            <td>${selectedItem.stock_expired || 'N/A'}</td>
-            <td>${selectedItem.current_stock}</td>
-            <td><input type="number" class="form-control" value="0" min="0"></td>
-        </tr>
-    `;
+            var addedRow = `
+                <tr>
+                    <td>${selectedItem.product_id}</td>
+                    <td>${selectedItem.product_name}</td>
+                    <td>${selectedItem.batch_no}</td>
+                    <td>${selectedItem.stock_expired || 'N/A'}</td>
+                    <td>${selectedItem.current_stock}</td>
+                    <td><input type="number" class="form-control" value="0" min="0"></td>
+                </tr>
+            `;
 
-    if (addedItemsTable) {
-        addedItemsTable.append(addedRow);
-        $('#itemModal').modal('hide');
-    } else {
-        console.error('Added items table reference is missing');
-    }
-});
+            if (addedItemsTable) {
+                addedItemsTable.append(addedRow);
+                $('#itemModal').modal('hide');
+            } else {
+                console.error('Added items table reference is missing');
+            }
+        });
 
-
-    });
-</script>
-
-<script>
-    $(document).ready(function() {
-        // Fungsi untuk menyimpan data
+        // Fungsi untuk menyimpan data transfer
         $('#saveButton').click(function() {
             var addedItems = [];
             var isValid = true; // Flag untuk validasi
@@ -227,7 +220,7 @@ $(document).on('click', '.select-item', function() {
 
             // Kirim data ke server
             $.ajax({
-                url: '/save_stock_out',
+                url: '/transfer_item',  // Ganti dengan rute yang sesuai
                 method: 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify({
@@ -248,6 +241,5 @@ $(document).on('click', '.select-item', function() {
         });
     });
 </script>
-
 
 {% endblock %}
